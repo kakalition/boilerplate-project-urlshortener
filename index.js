@@ -1,7 +1,13 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+
+var bodyParser = require('body-parser')
+var jsonParser = bodyParser.json()
+
 const app = express();
+
+const map = new Map();
 
 // Basic Configuration
 const port = process.env.PORT || 3000;
@@ -10,15 +16,40 @@ app.use(cors());
 
 app.use('/public', express.static(`${process.cwd()}/public`));
 
-app.get('/', function(req, res) {
+app.get('/', function (req, res) {
   res.sendFile(process.cwd() + '/views/index.html');
 });
 
 // Your first API endpoint
-app.get('/api/hello', function(req, res) {
+app.get('/api/hello', function (req, res) {
   res.json({ greeting: 'hello API' });
 });
 
-app.listen(port, function() {
+app.post('/api/shorturl', jsonParser, function (req, res) {
+  const url = req.body.url;
+  if (!(url.startsWith('http://www.') || url.startsWith('https://www.')) || !url.endsWith('.com')) {
+    return res.json({
+      error: 'invalid_url',
+    })
+  }
+
+  const mapLength = map.keys.length;
+  const key = `${mapLength + 1}`;
+  map.set(key, url);
+
+  res.json({
+    original_url: url,
+    short_url: key,
+  });
+});
+
+app.get('/api/shorturl/:key', function (req, res) {
+  const key = req.params['key'];
+  const targetUrl = map.get(key);
+
+  res.redirect(targetUrl);
+});
+
+app.listen(port, function () {
   console.log(`Listening on port ${port}`);
 });
