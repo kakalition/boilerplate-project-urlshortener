@@ -23,20 +23,15 @@ app.get('/api/hello', function (req, res) {
   res.json({ greeting: 'hello API' });
 });
 
+const urlPattern = /^(https?:\/\/[^\s/$.?#].[^\s]*)$/i;
 app.post('/api/shorturl', function (req, res) {
   const url = req.body.url;
   console.log('url', url)
 
-  if (!url) {
+  if (!urlPattern.test(url)) {
     return res.json({
-      error: 'invalid_url',
-    })
-  }
-
-  if (!(url.startsWith('http://www.') || url.startsWith('https://www.')) || !url.endsWith('.com')) {
-    return res.json({
-      error: 'invalid_url',
-    })
+      error: 'invalid url',
+    });
   }
 
   const mapLength = map.keys.length;
@@ -45,7 +40,7 @@ app.post('/api/shorturl', function (req, res) {
 
   res.json({
     original_url: url,
-    short_url: key,
+    short_url: parseInt(key),
   });
 });
 
